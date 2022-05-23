@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -19,7 +20,21 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
   try {
     await client.connect();
-    console.log('mongodb connected')
+    const motoPartsCollection = client.db("moto_parts").collection("parts");
+    app.get('/parts', async (req, res) => {
+      const query = {};
+      const cursor = motoPartsCollection.find(query);
+      const partsed = await cursor.toArray();
+      res.send(partsed);
+    })
+
+    //get on item details
+    app.get('/parts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await motoPartsCollection.findOne(query);
+      res.send(result)
+    })
 
   }
   finally {
