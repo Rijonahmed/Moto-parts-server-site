@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const { send } = require('express/lib/response');
 const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -21,6 +22,10 @@ async function run() {
   try {
     await client.connect();
     const motoPartsCollection = client.db("moto_parts").collection("parts");
+    const bookingCollection = client.db("moto_parts").collection("booking");
+
+
+    //get read all parts
     app.get('/parts', async (req, res) => {
       const query = {};
       const cursor = motoPartsCollection.find(query);
@@ -28,13 +33,38 @@ async function run() {
       res.send(partsed);
     })
 
-    //get on item details
+    //get on parts details
     app.get('/parts/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await motoPartsCollection.findOne(query);
       res.send(result)
     })
+
+    // get booking details
+
+    app.post('/booking', async (req, res) => {
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking);
+      res.send(result);
+    })
+
+    // app.get('/booking', async (req, res) => {
+    //   const query = {};
+    //   const cursor = bookingCollection.find(query);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // })
+
+    app.get('/booking', async (req, res) => {
+      const userEmail = req.query.userEmail;
+      const query = { userEmail: userEmail };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
+
 
   }
   finally {
