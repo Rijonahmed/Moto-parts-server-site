@@ -32,7 +32,7 @@ async function run() {
       const query = {};
       const cursor = motoPartsCollection.find(query);
       const partsed = await cursor.toArray();
-      res.send(partsed);
+      res.send(partsed.reverse());
     })
 
     //get on parts details
@@ -42,6 +42,26 @@ async function run() {
       const result = await motoPartsCollection.findOne(query);
       res.send(result)
     })
+
+    // post parts 
+    app.post('/parts', async (req, res) => {
+      const addParts = req.body;
+      const result = await motoPartsCollection.insertOne(addParts)
+      res.send(result);
+    })
+
+    // delete parts
+
+    app.delete('/parts/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+
+      const result = await motoPartsCollection.deleteOne(filter);
+
+      res.send(result);
+    })
+
+
 
     //---------------product parts section  end----------//
 
