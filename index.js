@@ -23,9 +23,11 @@ async function run() {
     await client.connect();
     const motoPartsCollection = client.db("moto_parts").collection("parts");
     const bookingCollection = client.db("moto_parts").collection("booking");
+    const userCollection = client.db("moto_parts").collection("users");
+    const myProfileCollection = client.db("moto_parts").collection("myProfile");
 
-
-    //get read all parts
+    //---------------product parts section  start----------//
+    //get read all parts 
     app.get('/parts', async (req, res) => {
       const query = {};
       const cursor = motoPartsCollection.find(query);
@@ -41,6 +43,9 @@ async function run() {
       res.send(result)
     })
 
+    //---------------product parts section  end----------//
+
+    //---------------booking section  start----------//
     // get booking details
 
     app.post('/booking', async (req, res) => {
@@ -62,6 +67,80 @@ async function run() {
       const result = await bookingCollection.find(query).toArray();
       res.send(result);
     })
+
+    //---------------booking section  end----------//
+
+
+    //---------------my profile section  start----------//
+    // get my profile details
+
+    app.post('/myProfile', async (req, res) => {
+      const profile = req.body;
+      const result = await myProfileCollection.insertOne(profile)
+      res.send(result);
+    })
+
+
+    app.get('/myProfile', async (req, res) => {
+      const query = {};
+      const cursor = myProfileCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.get('/myProfile/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await myProfileCollection.findOne(query)
+      res.send(result);
+    })
+    //---------------my profile section  end----------//
+
+
+    //---------------user & admin section  start----------//
+
+    app.get('/user', async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get('/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email })
+
+      const isAdmin = user.role === 'admin';
+      res.send({ admin: isAdmin })
+    });
+
+
+    app.put('/user/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: 'admin' },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+
+
+    app.put('/user/:email', async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    })
+
+
+    //---------------user & admin section  end----------//
+
+
 
 
 
