@@ -1,11 +1,14 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const { send } = require('express/lib/response');
 const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
-const port = process.env.PORT || 5000;
+
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 
 
 
@@ -25,6 +28,29 @@ async function run() {
     const bookingCollection = client.db("moto_parts").collection("booking");
     const userCollection = client.db("moto_parts").collection("users");
     const myProfileCollection = client.db("moto_parts").collection("myProfile");
+    const reviewsCollection = client.db("moto_parts").collection("reviews");
+
+
+    // -------------user payment section start------------//
+
+    // app.post("/create-payment-intent", async (req, res) => {
+    //   const parts = req.body;
+    //   const price = parts.totalPrice;
+    //   console.log(price);
+    //   const amount = price * 100;
+    //   console.log(amount)
+
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     amount: amount,
+    //     currency: "usd",
+    //     payment_methods_types: ['card']
+    //   });
+
+    //   res.send({ clientSecret: paymentIntent.client_secret, })
+
+    // })
+
+    // -------------user payment section end------------//
 
     //---------------product parts section  start----------//
     //get read all parts 
@@ -65,6 +91,28 @@ async function run() {
 
     //---------------product parts section  end----------//
 
+    //---------------Review section  start----------//
+
+
+    app.get('/reviews', async (req, res) => {
+      const query = {};
+      const cursor = reviewsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result.reverse());
+    })
+
+    app.post('/reviews', async (req, res) => {
+      const review = req.body;
+      const result = await reviewsCollection.insertOne(review)
+      res.send(result);
+    })
+
+
+
+    //---------------Review section  end----------//
+
+
+
     //---------------booking section  start----------//
     // get booking details
 
@@ -73,13 +121,6 @@ async function run() {
       const result = await bookingCollection.insertOne(booking);
       res.send(result);
     })
-
-    // app.get('/booking', async (req, res) => {
-    //   const query = {};
-    //   const cursor = bookingCollection.find(query);
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // })
 
     app.get('/booking/:id', async (req, res) => {
       const id = req.params.id;
@@ -166,6 +207,8 @@ async function run() {
 
 
     //---------------user & admin section  end----------//
+
+
 
 
 
